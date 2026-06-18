@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Belajar Pengenalan Pola - Rumah Pendidikan</title>
+    <style>
+        :root {
+            --bg-main: #f1f5f9;
+            --bg-card: #ffffff;
+            --primary-blue: #0284c7; /* Biru Khas Rumah Pendidikan */
+            --primary-light: #e0f2fe;
+            --success-green: #22c55e;
+            --danger-red: #ef4444;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --gold: #f59e0b;
+            --silver: #94a3b8;
+            --bronze: #b45309;
+            --border-light: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+
+        /* XP & LEVELING FLOATING BAR */
+        .xp-badge-top { background: var(--bg-card); border: 1px solid var(--border-light); padding: 6px 16px; border-radius: 50px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .xp-bar-fill { width: 60px; height: 8px; background: #cbd5e1; border-radius: 10px; overflow: hidden; display: inline-block; vertical-align: middle; }
+        .xp-bar-inner { width: 0%; height: 100%; background: var(--primary-blue); transition: width 0.3s ease; }
+
+        /* NAVBAR PORTAL RUMAH PENDIDIKAN */
+        .navbar { background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; position: sticky; top: 0; z-index: 1000; border-bottom: 3px solid var(--primary-blue); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--primary-blue); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
+        .nav-menu { display: flex; gap: 5px; background: #f8fafc; padding: 5px; border-radius: 10px; border: 1px solid var(--border-light); }
+        .nav-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.9rem; font-weight: 600; padding: 8px 18px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .nav-btn:hover { color: var(--primary-blue); background: #f0fdf4; }
+        .nav-btn.active { color: #ffffff; background: var(--primary-blue); font-weight: 700; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2); }
+
+        /* FLOATING TOAST NOTIFICATION */
+        #xp-toast { position: fixed; bottom: 30px; right: 30px; background: var(--primary-blue); color: #ffffff; padding: 15px 25px; border-radius: 12px; font-weight: 700; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.3); display: none; transform: translateY(50px); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2000; align-items: center; gap: 10px; }
+        #xp-toast.show { display: flex; transform: translateY(0); opacity: 1; }
+
+        /* CONTAINER LAYOUT */
+        .app-container { flex-grow: 1; padding: 40px; display: flex; justify-content: center; }
+        .tab-pane { display: none; width: 100%; max-width: 1200px; }
+        .tab-pane.active { display: block; animation: smoothSlideUp 0.4s ease-out forwards; }
+        @keyframes smoothSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* HERO STYLE */
+        .hero-section { background: var(--bg-card); border-radius: 16px; padding: 50px 40px; text-align: center; border: 1px solid var(--border-light); box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
+        .hero-title { font-size: 2.4rem; font-weight: 800; color: var(--primary-blue); margin-bottom: 15px; letter-spacing: -0.5px; }
+        .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 750px; margin: 0 auto 40px auto; line-height: 1.6; }
+        
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; width: 100%; }
+        .card-item { background: #f8fafc; border: 1px solid var(--border-light); border-radius: 14px; padding: 25px; text-align: left; cursor: pointer; transition: all 0.25s; }
+        .card-item:hover { transform: translateY(-4px); background: #ffffff; border-color: var(--primary-blue); box-shadow: 0 12px 20px rgba(2, 132, 199, 0.08); }
+        .card-icon { font-size: 1.8rem; margin-bottom: 15px; display: inline-block; padding: 10px; background: var(--primary-light); border-radius: 10px; color: var(--primary-blue); }
+        .card-item h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .card-item p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+
+        /* EMBED VIEWPORT STYLING */
+        .viewport-box { background: var(--bg-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border-light); box-shadow: 0 15px 35px rgba(0,0,0,0.05); height: 650px; }
+        .viewport-box iframe { width: 100%; height: 100%; border: none; background: #ffffff; }
+
+        .placeholder-box { background: var(--bg-card); border-radius: 16px; padding: 50px; text-align: center; border: 2px dashed #cbd5e1; max-width: 700px; margin: 40px auto; }
+
+        /* GAME MASTER DESIGN */
+        header.game-header { text-align: center; margin-bottom: 25px; }
+        header.game-header h1 { font-size: 2rem; font-weight: 800; color: var(--primary-blue); }
+        .game-panel { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border-light); padding: 30px; min-height: 600px; display: flex; flex-direction: column; justify-content: space-between; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+        
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
+
+        .hud-status { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 2px solid var(--border-light); font-size: 0.9rem; font-weight: 700; flex-wrap: wrap; gap: 12px; }
+        .game-badge { background: #f1f5f9; border: 1px solid var(--border-light); color: var(--text-main); padding: 6px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
+        .game-badge.active-tim { background: var(--primary-light); border-color: var(--primary-blue); color: var(--primary-blue); }
+        .game-badge.lives-box { background: #fee2e2; border-color: #fca5a5; color: var(--danger-red); letter-spacing: 1px; }
+
+        .prompt-text { font-size: 1.25rem; font-weight: 700; color: var(--text-main); text-align: center; margin-bottom: 25px; line-height: 1.5; }
+        
+        /* INTERACTIVES ELEMENTS */
+        .options-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; }
+        .classic-btn { background: #f8fafc; border: 1px solid var(--border-light); color: var(--text-main); padding: 18px; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .classic-btn:hover { background: var(--primary-blue); color: #ffffff; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(2, 132, 199, 0.2); border-color: var(--primary-blue); }
+
+        .slots-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 25px; }
+        .hud-slot { width: 80px; height: 80px; border: 2px dashed #94a3b8; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: 700; background: #f8fafc; color: var(--primary-blue); }
+        .hud-slot.filled { border-style: solid; border-color: var(--primary-blue); background: var(--primary-light); }
+        
+        .draggable-row { display: flex; gap: 14px; justify-content: center; }
+        .hud-drag-item { width: 70px; height: 70px; background: var(--primary-blue); color: #ffffff; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; font-weight: 700; cursor: grab; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.15); }
+
+        .matching-hud { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%; max-width: 600px; margin: 0 auto; }
+        .matching-node { background: #f8fafc; border: 1px solid var(--border-light); padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 600; text-align: center; transition: all 0.2s; }
+        .matching-node.selected { border-color: var(--primary-blue); background: var(--primary-light); color: var(--primary-blue); }
+        .matching-node.matched { background: #dcfce7; color: var(--success-green); border-color: var(--success-green); cursor: default; }
+
+        .sort-hud-list { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 480px; margin: 0 auto; }
+        .sort-hud-item { background: #f8fafc; border: 1px solid var(--border-light); padding: 14px 20px; border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .arrow-btn { width: 32px; height: 32px; background: #e2e8f0; border: 1px solid var(--border-light); color: var(--text-main); border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        .arrow-btn:hover { background: var(--primary-blue); color: #ffffff; }
+
+        .input-hud-group { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 400px; margin: 0 auto; }
+        .hud-input { width: 100%; padding: 15px; font-size: 1.25rem; text-align: center; font-weight: 700; border: 2px solid #cbd5e1; background: #f8fafc; color: var(--text-main); border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; outline: none; }
+        .hud-input:focus { border-color: var(--primary-blue); background: #fff; box-shadow: 0 0 10px rgba(2, 132, 199, 0.15); }
+
+        .action-submit-btn { background: var(--success-green); color: #ffffff; padding: 14px 40px; font-size: 1rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); transition: all 0.2s; }
+        .action-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(34, 197, 94, 0.3); }
+
+        /* GROUPS LIST VIEWPORT */
+        .room-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; width: 100%; max-width: 900px; margin: 20px auto 0 auto; }
+        .room-card { background: #f8fafc; border: 1px solid var(--border-light); padding: 22px 18px; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .room-card:hover:not(.gugur):not(.done) { border-color: var(--primary-blue); background: var(--primary-light); transform: scale(1.02); }
+        .room-card.gugur { border-color: #fca5a5; background: #fee2e2; opacity: 0.7; cursor: not-allowed; }
+        .room-card.done { border-color: #bbf7d0; background: #dcfce7; cursor: not-allowed; }
+
+        /* FEEDBACK LAYER MODAL */
+        .hud-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); border-radius: 16px; flex-direction: column; justify-content: center; align-items: center; z-index: 100; padding: 20px; text-align: center; }
+        .hud-overlay-text { font-size: 2.5rem; font-weight: 800; margin-bottom: 8px; }
+
+        /* LEADERBOARD TABLE & PODIUM */
+        .podium-hub { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin: 30px auto; height: 220px; width: 100%; max-width: 600px; }
+        .pillar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; border-radius: 12px 12px 0 0; color: #ffffff; font-weight: 700; padding: 15px; text-align: center; flex: 1; }
+        .pillar.gold { background: linear-gradient(to top, #d97706, var(--gold)); height: 200px; }
+        .pillar.silver { background: linear-gradient(to top, #475569, var(--silver)); height: 150px; }
+        .pillar.bronze { background: linear-gradient(to top, #7c2d12, var(--bronze)); height: 110px; }
+        .pillar-name { font-size: 1rem; margin-bottom: 5px; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .pillar-score { font-size: 0.8rem; background: rgba(0, 0, 0, 0.2); padding: 2px 8px; border-radius: 12px; }
+
+        .minimal-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); }
+        .minimal-table th, .minimal-table td { padding: 14px; text-align: center; font-size: 0.95rem; border-bottom: 1px solid var(--border-light); }
+        .minimal-table th { background: #f1f5f9; color: var(--text-muted); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">
+            🌐 <span>PATTERN RECOGNITION HUB</span>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active" onclick="switchTab('beranda', this)">🏠 Beranda</button>
+            <button class="nav-btn" onclick="switchTab('materi', this)">📄 Modul Teori</button>
+            <button class="nav-btn" onclick="switchTab('video', this)">🎬 Laboratorium Audio</button>
+            <button class="nav-btn" onclick="switchTab('game', this)">🎮 Arena Estafet</button>
+        </div>
+        <div class="xp-badge-top">
+            <span>Poin Aktivitas:</span>
+            <div class="xp-bar-fill"><div class="xp-bar-inner" id="xp-indicator-bar"></div></div>
+            <span id="txt-xp-total" style="color: var(--primary-blue);">0 XP</span>
+        </div>
+    </nav>
+
+    <div id="xp-toast">
+        <span>⭐</span> <span id="xp-toast-msg">+30 XP Rumah Pendidikan!</span>
+    </div>
+
+    <div class="app-container">
+
+        <div id="beranda" class="tab-pane active">
+            <div class="hero-section">
+                <h2 class="hero-title">Laboratorium Pengenalan Pola (Pattern Recognition)</h2>
+                <p class="hero-subtitle">
+                    Belajar menganalisis persamaan, perbedaan, keteraturan data, dan tren logika untuk memecahkan masalah komputasi secara efektif dan terstandarisasi.
+                </p>
+                
+                <div class="grid-cards">
+                    <div class="card-item" onclick="triggerNavIndex(1)">
+                        <div class="card-icon">📄</div>
+                        <h3>Modul Pengenalan Pola</h3>
+                        <p>Pelajari struktur teori dan materi pola logika komputasi langsung lewat penampil slide presentasi resmi.</p>
+                    </div>
+                    <div class="card-item" onclick="triggerNavIndex(2)">
+                        <div class="card-icon">🎬</div>
+                        <h3>Analisis Pola Berbasis Audio</h3>
+                        <p>Dengarkan pembahasan taktis mengenai implementasi pengenalan pola dalam dunia pemrograman modern.</p>
+                    </div>
+                    <div class="card-item" onclick="triggerNavIndex(3)">
+                        <div class="card-icon">🎮</div>
+                        <h3>Turnamen Estafet Pengenalan Pola</h3>
+                        <p>Uji kemampuan analisis kelompok siswa secara kolaboratif melalui tantangan estafet tanpa putus.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="materi" class="tab-pane">
+            <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-weight: 700; font-size: 1.25rem;">Presentasi Pembelajaran Analisis Pola</h3>
+                <a href="https://docs.google.com/presentation/d/1ewTTVcIFzTs3BkAShZOfMsxgKoUI8yNC60u4RvDqwj4/edit?slide=id.p1#slide=id.p1" target="_blank" class="action-submit-btn" style="margin-top:0; padding:8px 16px; font-size:0.85rem; text-decoration:none;">Buka di Tab Baru ↗</a>
+            </div>
+            <div class="viewport-box">
+                <iframe src="https://docs.google.com/presentation/d/1ewTTVcIFzTs3BkAShZOfMsxgKoUI8yNC60u4RvDqwj4/embed?start=false&loop=false&delayms=3000" allowfullscreen="true"></iframe>
+            </div>
+        </div>
+
+        <div id="video" class="tab-pane">
+            <div class="placeholder-box">
+                <span style="font-size: 3rem;">🎬</span>
+                <h2 style="margin: 15px 0 10px 0; font-weight:800; color:var(--primary-blue)">Podcast Edukasi Pengenalan Pola</h2>
+                <p style="color: var(--text-muted); margin-bottom: 25px; line-height: 1.5; font-size:0.95rem;">
+                    Gali wawasan mendalam mengenai pemecahan masalah kompleks menggunakan metode berpikir komputasional dan deteksi keteraturan tren.
+                </p>
+                <a href="https://notebooklm.google.com/notebook/c4160d4b-d802-4fc6-9c35-9e98ee3237f3/artifact/ab9b2629-7e1d-4399-b047-c61ce357157c?utm_source=nlm_web_share&utm_medium=google_oo&utm_campaign=art_share_2&utm_content=&utm_smc=nlm_web_share_google_oo_art_share_2_" target="_blank" class="action-submit-btn" style="text-decoration: none; display: inline-block;">
+                    Buka Audio Player Player 🚀
+                </a>
+            </div>
+        </div>
+
+        <div id="game" class="tab-pane">
+            <header class="game-header">
+                <h1>ARENA ESTAFET PENGENALAN POLA</h1>
+                <p style="color: var(--text-muted); margin-top:4px; font-size:0.9rem;">Turnamen Berpikir Komputasional Klasifikasi Pola &amp; Deteksi Tren</p>
+            </header>
+
+            <div class="game-panel">
+                <div id="feedback" class="hud-overlay">
+                    <div id="f-text" class="hud-overlay-text">BERHASIL</div>
+                    <div id="f-sub" style="font-size: 1.1rem; margin-bottom:25px; color: var(--text-muted);">Skor kelompok berhasil diperbarui</div>
+                    <button id="btn-feedback-next" class="action-submit-btn" onclick="handleNextStep()">Lanjutkan Operasi ➔</button>
+                </div>
+
+                <div id="screen-home" class="screen active" style="text-align: center; max-width: 650px; margin: 40px auto;">
+                    <h2 style="font-size: 1.4rem; font-weight:800; color: var(--primary-blue); margin-bottom: 10px;">Aturan Sistem Estafet Berkelompok:</h2>
+                    <p style="font-size:0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 25px;">
+                        Setiap kelompok memiliki maksimal 3 Unit Nyawa. Jika salah menjawab hingga **3 Nyawa Habis**, giliran kelompok tersebut otomatis selesai dan **tantangan stage akan dioper secara otomatis** ke kelompok berikutnya yang masih siap bermain!
+                    </p>
+                    <button class="action-submit-btn" style="background: var(--primary-blue); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);" onclick="startAdventure()">Masuk ke Ruang Manajemen Kelas 🎒</button>
+                </div>
+
+                <div id="screen-selection" class="screen">
+                    <h2 style="font-size: 1.2rem; font-weight:800; text-align:center;">PILIH KELOMPOK AKTIF UNTUK MEMULAI</h2>
+                    <p style="color: var(--text-muted); font-size:0.9rem; text-align:center; margin-top:4px;">Klik salah satu kelompok di bawah untuk memulai atau melanjutkan estafet:</p>
+                    <div class="room-grid" id="grid-groups"></div>
+                    <div style="text-align:center; margin-top: 30px;">
+                        <button class="action-submit-btn" style="background: var(--text-muted); color: #fff; box-shadow:none;" onclick="showFinalScoreboard(false)">Lihat Papan Skor Sementara 📊</button>
+                    </div>
+                </div>
+
+                <div id="screen-gameplay" class="screen">
+                    <div class="hud-status">
+                        <div class="game-badge">STAGE KE: <span id="lbl-stage" style="color:var(--primary-blue);">1 / 20</span></div>
+                        <div class="game-badge active-tim">KELOMPOK AKTIF: <span id="lbl-group">-</span></div>
+                        <div class="game-badge lives-box">SISA NYAWA: <span id="lbl-lives">❤️❤️❤️</span></div>
+                        <div class="game-badge" style="border-color:var(--gold); color:var(--gold); background: #fef3c7;">SKOR: <span id="lbl-points">0 PTS</span></div>
+                    </div>
+                    <div id="lbl-instruction" class="prompt-text">-</div>
+                    <div class="interaction-area" id="box-interaction"></div>
+                    <div id="action-bar" style="text-align: center;"></div>
+                </div>
+
+                <div id="screen-score" class="screen">
+                    <h2 style="font-size: 1.6rem; font-weight:800; color: var(--primary-blue); text-align: center;" id="lbl-final-title">PAPAN KLASEMEN TURNAMEN</h2>
+                    
+                    <div class="podium-hub" id="box-podium">
+                        <div class="pillar silver">
+                            <div class="pillar-name" id="podium-2-name">-</div>
+                            <div class="pillar-score" id="podium-2-score">0 Pts</div>
+                            <div style="font-size: 1.5rem; margin-top:4px;">🥈</div>
+                        </div>
+                        <div class="pillar gold">
+                            <div class="pillar-name" id="podium-1-name">-</div>
+                            <div class="pillar-score" id="podium-1-score">0 Pts</div>
+                            <div style="font-size: 1.8rem; margin-top:4px;">🥇</div>
+                        </div>
+                        <div class="pillar bronze">
+                            <div class="pillar-name" id="podium-3-name">-</div>
+                            <div class="pillar-score" id="podium-3-score">0 Pts</div>
+                            <div style="font-size: 1.5rem; margin-top:4px;">🥉</div>
+                        </div>
+                    </div>
+
+                    <table class="minimal-table">
+                        <thead>
+                            <tr>
+                                <th>Peringkat</th>
+                                <th>Identitas Kelompok</th>
+                                <th>Sisa Nyawa</th>
+                                <th>Total Skor</th>
+                                <th>Status Kelompok</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-data"></tbody>
+                    </table>
+                    
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button id="btn-back-to-room" class="action-submit-btn" style="background:#64748b; color:#fff; box-shadow:none;" onclick="showSelectionScreen()">Kembali Ke Manajemen Kelas</button>
+                        <button class="action-submit-btn" style="background:var(--primary-blue); box-shadow:none;" onclick="resetEntireTournament()">Reset Turnamen 🔄</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let globalXP = 0;
+        function earnXP(amount, message) {
+            globalXP += amount;
+            document.getElementById("txt-xp-total").innerText = `${globalXP} XP`;
+            let cap = Math.min((globalXP / 500) * 100, 100);
+            document.getElementById("xp-indicator-bar").style.width = `${cap}%`;
+
+            const toast = document.getElementById("xp-toast");
+            document.getElementById("xp-toast-msg").innerText = `+${amount} XP: ${message}`;
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 2500);
+        }
+
+        function triggerNavIndex(idx) {
+            const btns = document.querySelectorAll('.nav-menu .nav-btn');
+            if(btns[idx]) btns[idx].click();
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            element.classList.add('active');
+
+            if (tabId === 'materi') earnXP(20, "Membaca Modul Teori Pola");
+            if (tabId === 'video') earnXP(20, "Membuka Lab Audio Analisis Pola");
+        }
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSynthTone(freq, type, duration, volume = 0.1) {
+            try {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+        function soundCorrect() { playSynthTone(523.25, 'sine', 0.12, 0.1); }
+        function soundIncorrect() { playSynthTone(180, 'triangle', 0.25, 0.15); }
+
+        const gameStages = [
+            { stage: 1, points: 10, type: "multiple-choice", instruction: "Pengenalan Pola Ikon: Tebak bentuk urutan logis berikutnya:", setup: { display: "🌐 💎 🌐 💎 🌐 [ ? ]", options: ["🌐 Bola Dunia", "💎 Berlian", "⚡ Petir"], correctIdx: 1 } },
+            { stage: 2, points: 10, type: "multiple-choice", instruction: "Deteksi Keteraturan Geometri: Lengkapi deret bentuk berikut:", setup: { display: "🔺 🔺 🟩 🔺 🔺 [ ? ]", options: ["🟩 Kotak", "🔺 Segitiga", "🟡 Lingkaran"], correctIdx: 0 } },
+            { stage: 3, points: 10, type: "multiple-choice", instruction: "Identifikasi Tren Status: Prediksi kondisi daya baterai selanjutnya:", setup: { display: "🔋 🔋 🪫 🔋 🔋 [ ? ]", options: ["🪫 Daya Habis", "🔋 Daya Penuh", "🔌 Mengisi"], correctIdx: 0 } },
+            { stage: 4, points: 10, type: "multiple-choice", instruction: "Klasifikasi Pola Keamanan: Temukan pola gembok penutup:", setup: { display: "🔒 🔓 🔒 🔓 🔒 [ ? ]", options: ["🔒 Terkunci", "🔓 Terbuka", "🔑 Kunci"], correctIdx: 1 } },
+            { stage: 5, points: 20, type: "drag-drop", instruction: "Pola Penambahan Konstan (+4): Lengkapi nilai melompat berikut:", setup: { sequence: ["4", "8", "slot0", "16", "slot1"], items: ["12", "20", "10", "18"], answers: { "slot0": "12", "slot1": "20" } } },
+            { stage: 6, points: 20, type: "drag-drop", instruction: "Pola Pengurangan Mundur (-3): Susun runtutan algoritma yang benar:", setup: { sequence: ["30", "27", "slot0", "21", "slot1"], items: ["24", "18", "25", "15"], answers: { "slot0": "24", "slot1": "18" } } },
+            { stage: 7, points: 20, type: "drag-drop", instruction: "Pertumbuhan Pola Eksponensial Biner (x2): Pecahkan kelipatan data:", setup: { sequence: ["2", "4", "slot0", "16", "slot1"], items: ["8", "32", "6", "12"], answers: { "slot0": "8", "slot1": "32" } } },
+            { stage: 8, points: 20, type: "drag-drop", instruction: "Analisis Deret Bilangan Ganjil: Isilah lokasi angka yang hilang:", setup: { sequence: ["11", "13", "slot0", "17", "slot1"], items: ["15", "19", "14", "21"], answers: { "slot0": "15", "slot1": "19" } } },
+            { stage: 9, points: 30, type: "matching", instruction: "Pasangkan Pola Istilah Pengembangan Web dengan Benar:", setup: { left: [{id:"L1",text:"HTML"},{id:"L2",text:"BUG"}], right: [{id:"R1",text:"Struktur Web",match:"L1"},{id:"R2",text:"Error Kode",match:"L2"}] } },
+            { stage: 10, points: 30, type: "matching", instruction: "Hubungkan Klasifikasi Perangkat Komputer Berdasarkan Tipenya:", setup: { left: [{id:"L1",text:"MOUSE"},{id:"L2",text:"MONITOR"}], right: [{id:"R1",text:"Input Unit",match:"L1"},{id:"R2",text:"Output Unit",match:"L2"}] } },
+            { stage: 11, points: 30, type: "matching", instruction: "Jodohkan Pola Ekstensi Berkas Berdasarkan Struktur Formatnya:", setup: { left: [{id:"L1",text:".MP3"},{id:"L2",text:".JPG"}], right: [{id:"R1",text:"File Musik",match:"L1"},{id:"R2",text:"File Gambar",match:"L2"}] } },
+            { stage: 12, points: 30, type: "matching", instruction: "Jodohkan Pola Kombinasi Shortcut Keyboard:", setup: { left: [{id:"L1",text:"CTRL + C"},{id:"L2",text:"CTRL + V"}], right: [{id:"R1",text:"Menyalin Data",match:"L1"},{id:"R2",text:"Menempel Data",match:"L2"}] } },
+            { stage: 13, points: 40, type: "sortable", instruction: "Urutkan pola ukuran file dari kapasitas TERKECIL ke TERBESAR:", setup: { items: [{text:"Data_Z.dat (80 KB)",val:80},{text:"Data_X.dat (5 KB)",val:5},{text:"Data_Y.dat (500 KB)",val:500}] } },
+            { stage: 14, points: 40, type: "sortable", instruction: "Urutkan pola kapasitas video dari resolusi TERKECIL ke TERBESAR:", setup: { items: [{text:"Film_Full.mp4 (900 MB)",val:900},{text:"Klip_Pendek.mp4 (12 MB)",val:12},{text:"Draft_Edit.mp4 (450 MB)",val:450}] } },
+            { stage: 15, points: 40, type: "sortable", instruction: "Urutkan integritas muatan kompresi ZIP dari yang TERINGAN:", setup: { items: [{text:"Laporan.zip (750 KB)",val:750},{text:"Backup.zip (3 MB)",val:3000},{text:"Foto_Kecil.zip (120 KB)",val:120}] } },
+            { stage: 16, points: 40, type: "sortable", instruction: "Urutkan muatan lembar kerja Excel dari yang TERKECIL:", setup: { items: [{text:"Tabel_A.xlsx (200 KB)",val:200},{text:"Tabel_B.xlsx (8 KB)",val:8},{text:"Tabel_C.xlsx (1.5 MB)",val:1500}] } },
+            { stage: 17, points: 50, type: "input-code", instruction: "Pecahkan Pola Kriptografi Geser (+1): Masukkan hasil dari kata 'HALO'!", setup: { hint: "Aturan pola: A -> B, B -> C, dst. Tulis dalam HURUF KAPITAL.", correctAnswer: "IBMP" } },
+            { stage: 18, points: 50, type: "input-code", instruction: "Temukan pola kelanjutan lompatan abjad berikut: A, C, E, G, ...", setup: { hint: "Ketik 1 huruf kapital berikutnya setelah huruf G!", correctAnswer: "I" } },
+            { stage: 19, points: 50, type: "input-code", instruction: "Kenali pola pertumbuhan jarak angka: 1, 2, 4, 7, 11, ... Berapakah angka selanjutnya?", setup: { hint: "Analisis selisih penambahan antar angka yang selalu naik bertahap (+1, +2, +3, +4...)", correctAnswer: "16" } },
+            { stage: 20, points: 50, type: "input-code", instruction: "Pola Pembalikan String Kata: Jika 'WEB' menjadi 'BEW', maka 'DATA' menjadi?", setup: { hint: "Ketik jawaban dalam HURUF KAPITAL secara terbalik.", correctAnswer: "ATAD" } }
+        ];
+
+        let currentActiveStageIdx = 0; 
+        let selectedGroup = "";
+        let groupProfiles = {
+            "Kelompok 1": { score: 0, lives: 3, status: "Belum Main" },
+            "Kelompok 2": { score: 0, lives: 3, status: "Belum Main" },
+            "Kelompok 3": { score: 0, lives: 3, status: "Belum Main" },
+            "Kelompok 4": { score: 0, lives: 3, status: "Belum Main" },
+            "Kelompok 5": { score: 0, lives: 3, status: "Belum Main" }
+        };
+
+        let draggedElement = null, selectedMatchLeft = null, selectedMatchRight = null, matchPairsCount = 0;
+        let lastAnswerWasCorrect = false;
+        let nextActionState = "continue"; // continue, switch_group, game_over_all
+
+        function changeScreen(screenId) {
+            document.querySelectorAll("#game .screen").forEach(s => s.classList.remove("active"));
+            const target = document.getElementById(screenId);
+            if(target) target.classList.add("active");
+        }
+
+        function startAdventure() { 
+            if(audioCtx.state === 'suspended') audioCtx.resume(); 
+            showSelectionScreen(); 
+        }
+        
+        function checkAllGroupsFinished() { 
+            return Object.values(groupProfiles).every(p => p.status === "Tereliminasi" || p.status === "Selesai 20 Stage"); 
+        }
+
+        function showSelectionScreen() {
+            if (checkAllGroupsFinished()) { showFinalScoreboard(true); return; }
+            const grid = document.getElementById("grid-groups"); grid.innerHTML = "";
+            Object.entries(groupProfiles).forEach(([name, p]) => {
+                const card = document.createElement("div"); card.className = "room-card";
+                if (p.status === "Tereliminasi") {
+                    card.classList.add("gugur"); card.innerHTML = `<h3>${name}</h3><p style="color:var(--danger-red); font-size:0.85rem; font-weight:700; margin-top:5px;">💀 NYAWA HABIS</p><p style="font-size:0.8rem; color:var(--text-muted);">${p.score} Pts</p>`;
+                } else if (p.status === "Selesai 20 Stage") {
+                    card.classList.add("done"); card.innerHTML = `<h3>${name}</h3><p style="color:var(--success-green); font-size:0.85rem; font-weight:700; margin-top:5px;">⭐ SELESAI</p><p style="font-size:0.8rem; color:var(--text-muted);">${p.score} Pts</p>`;
+                } else {
+                    card.innerHTML = `<h3>${name}</h3><p style="color:var(--primary-blue); font-size:0.85rem; font-weight:600; margin-top:4px;">Siap Main</p><p style="margin-top:8px; font-size:0.8rem;">${"❤️".repeat(p.lives)}</p>`;
+                    card.onclick = () => launchMaratonWithGroup(name);
+                }
+                grid.appendChild(card);
+            });
+            changeScreen("screen-selection");
+        }
+
+        function launchMaratonWithGroup(groupName) { 
+            selectedGroup = groupName; 
+            groupProfiles[selectedGroup].status = "Sedang Main"; 
+            loadGameplay(); 
+        }
+
+        function findNextAvailableGroup() {
+            return Object.keys(groupProfiles).find(name => groupProfiles[name].status === "Belum Main");
+        }
+
+        function loadGameplay() {
+            if (currentActiveStageIdx >= gameStages.length) {
+                groupProfiles[selectedGroup].status = "Selesai 20 Stage";
+                showFinalScoreboard(true);
+                return;
+            }
+
+            const data = gameStages[currentActiveStageIdx];
+            document.getElementById("lbl-stage").innerText = `${data.stage} / ${gameStages.length}`;
+            document.getElementById("lbl-group").innerText = selectedGroup;
+            document.getElementById("lbl-points").innerText = `${groupProfiles[selectedGroup].score} PTS`;
+            document.getElementById("lbl-lives").innerText = "❤️".repeat(groupProfiles[selectedGroup].lives);
+            document.getElementById("lbl-instruction").innerText = data.instruction;
+
+            const container = document.getElementById("box-interaction"); const actionBar = document.getElementById("action-bar");
+            container.innerHTML = ""; actionBar.innerHTML = "";
+
+            if (data.type === "multiple-choice") {
+                const qDisplay = document.createElement("div"); qDisplay.style.cssText = "font-size: 1.8rem; font-weight:700; margin-bottom: 25px; background:#f8fafc; padding:20px; border-radius:12px; width:100%; border: 2px dashed var(--primary-blue); text-align:center; color:var(--text-main);"; qDisplay.innerText = data.setup.display; container.appendChild(qDisplay);
+                const grid = document.createElement("div"); grid.className = "options-layout";
+                data.setup.options.forEach((opt, idx) => {
+                    const btn = document.createElement("button"); btn.className = "classic-btn"; btn.innerText = opt; btn.onclick = () => verifyAnswer(idx === data.setup.correctIdx); grid.appendChild(btn);
+                });
+                container.appendChild(grid);
+            } else if (data.type === "drag-drop") {
+                const mainWrapper = document.createElement("div"); mainWrapper.style.width = "100%";
+                const slotWrapper = document.createElement("div"); slotWrapper.className = "slots-row";
+                data.setup.sequence.forEach(item => {
+                    const slot = document.createElement("div");
+                    if (item.startsWith("slot")) {
+                        slot.className = "hud-slot"; slot.dataset.slotId = item; slot.ondragover = (e) => e.preventDefault();
+                        slot.ondrop = (e) => { e.preventDefault(); if (!slot.innerText && draggedElement) { slot.innerText = draggedElement.innerText; slot.classList.add("filled"); draggedElement.style.visibility = "hidden"; } };
+                    } else { slot.className = "hud-slot filled"; slot.innerText = item; slot.style.background="#e2e8f0"; slot.style.color="var(--text-main)"; }
+                    slotWrapper.appendChild(slot);
+                });
+                const itemWrapper = document.createElement("div"); itemWrapper.className = "draggable-row";
+                data.setup.items.forEach(val => {
+                    const card = document.createElement("div"); card.className = "hud-drag-item"; card.innerText = val; card.draggable = true; card.ondragstart = () => { draggedElement = card; }; itemWrapper.appendChild(card);
+                });
+                mainWrapper.appendChild(slotWrapper); mainWrapper.appendChild(itemWrapper); container.appendChild(mainWrapper);
+                const btnCheck = document.createElement("button"); btnCheck.className = "action-submit-btn"; btnCheck.innerText = "Kunci Jawaban Pola";
+                btnCheck.onclick = () => { let correct = true; document.querySelectorAll(".hud-slot[data-slot-id]").forEach(s => { if (s.innerText !== data.setup.answers[s.dataset.slotId]) correct = false; }); verifyAnswer(correct); };
+                actionBar.appendChild(btnCheck);
+            } else if (data.type === "matching") {
+                matchPairsCount = 0; const matchWrapper = document.createElement("div"); matchWrapper.className = "matching-hud";
+                const colL = document.createElement("div"); colL.style.display="flex"; colL.style.flexDirection="column"; colL.style.gap="10px";
+                const colR = document.createElement("div"); colR.style.display="flex"; colR.style.flexDirection="column"; colR.style.gap="10px";
+                data.setup.left.forEach(item => {
+                    const div = document.createElement("div"); div.className = "matching-node"; div.innerText = item.text; div.dataset.id = item.id;
+                    div.onclick = () => { if(selectedMatchLeft) selectedMatchLeft.classList.remove("selected"); selectedMatchLeft = div; div.classList.add("selected"); checkPairs(); }; colL.appendChild(div);
+                });
+                [...data.setup.right].sort(() => Math.random() - 0.5).forEach(item => {
+                    const div = document.createElement("div"); div.className = "matching-node"; div.innerText = item.text; div.dataset.match = item.match;
+                    div.onclick = () => { if(selectedMatchRight) selectedMatchRight.classList.remove("selected"); selectedMatchRight = div; div.classList.add("selected"); checkPairs(); }; colR.appendChild(div);
+                });
+                function checkPairs() {
+                    if (selectedMatchLeft && selectedMatchRight) {
+                        if (selectedMatchRight.dataset.match === selectedMatchLeft.dataset.id) {
+                            selectedMatchLeft.className = "matching-node matched"; selectedMatchRight.className = "matching-node matched"; matchPairsCount++; selectedMatchLeft = null; selectedMatchRight = null; if (matchPairsCount === data.setup.left.length) verifyAnswer(true);
+                        } else { selectedMatchLeft.classList.remove("selected"); selectedMatchRight.classList.remove("selected"); selectedMatchLeft = null; selectedMatchRight = null; playSynthTone(140, 'triangle', 0.2, 0.1); }
+                    }
+                }
+                matchWrapper.appendChild(colL); matchWrapper.appendChild(colR); container.appendChild(matchWrapper);
+            } else if (data.type === "sortable") {
+                const sortWrapper = document.createElement("div"); sortWrapper.className = "sort-hud-list"; let itemsData = [...data.setup.items].sort(() => Math.random() - 0.5);
+                function renderSortItems() {
+                    sortWrapper.innerHTML = "";
+                    itemsData.forEach((item, idx) => {
+                        const div = document.createElement("div"); div.className = "sort-hud-item"; div.innerHTML = `<span>📂 ${item.text}</span>`; const bGroup = document.createElement("div");
+                        if(idx > 0) { const up = document.createElement("button"); up.className="arrow-btn"; up.innerText="▲"; up.onclick=() => { swap(idx, idx-1); }; bGroup.appendChild(up); }
+                        if(idx < itemsData.length-1) { const dn = document.createElement("button"); dn.className="arrow-btn"; dn.innerText="▼"; dn.onclick=() => { swap(idx, idx+1); }; bGroup.appendChild(dn); }
+                        div.appendChild(bGroup); sortWrapper.appendChild(div);
+                    });
+                }
+                function swap(i, j) { let t = itemsData[i]; itemsData[i] = itemsData[j]; itemsData[j] = t; renderSortItems(); }
+                renderSortItems(); container.appendChild(sortWrapper);
+                const btnCheck = document.createElement("button"); btnCheck.className = "action-submit-btn"; btnCheck.innerText = "Kunci Urutan Deret";
+                btnCheck.onclick = () => { let pass = true; for(let k=0; k<itemsData.length-1; k++) { if(itemsData[k].val > itemsData[k+1].val) pass = false; } verifyAnswer(pass); };
+                actionBar.appendChild(btnCheck);
+            } else if (data.type === "input-code") {
+                const inputWrapper = document.createElement("div"); inputWrapper.className = "input-hud-group";
+                const hintBox = document.createElement("p"); hintBox.style.cssText = "color:var(--text-muted); font-size:0.9rem; text-align:center;"; hintBox.innerText = data.setup.hint;
+                const inputField = document.createElement("input"); inputField.type = "text"; inputField.className = "hud-input"; inputField.id = "txt-pattern-answer"; inputField.placeholder = "KETIK JAWABAN DI SINI"; inputField.autocomplete = "off";
+                inputWrapper.appendChild(hintBox); inputWrapper.appendChild(inputField); container.appendChild(inputWrapper);
+                const btnCheck = document.createElement("button"); btnCheck.className = "action-submit-btn"; btnCheck.innerText = "Kirim Kode Jawaban";
+                btnCheck.onclick = () => { const userAns = document.getElementById("txt-pattern-answer").value.trim().toUpperCase(); verifyAnswer(userAns === data.setup.correctAnswer); };
+                actionBar.appendChild(btnCheck); setTimeout(() => inputField.focus(), 120);
+            }
+            changeScreen("screen-gameplay");
+        }
+
+        function verifyAnswer(isCorrect) {
+            const data = gameStages[currentActiveStageIdx]; const overlay = document.getElementById("feedback");
+            const fText = document.getElementById("f-text"); const fSub = document.getElementById("f-sub"); const btnFeedback = document.getElementById("btn-feedback-next");
+            
+            lastAnswerWasCorrect = isCorrect;
+            
+            if (isCorrect) {
+                soundCorrect(); groupProfiles[selectedGroup].score += data.points; 
+                fText.innerText = "JAWABAN BENAR!"; fText.style.color = "var(--success-green)"; 
+                fSub.innerText = `${selectedGroup} mendapatkan +${data.points} Poin Pembelajaran Pola.`; 
+                btnFeedback.innerText = "Lanjut Tantangan Berikutnya ➔";
+                nextActionState = "continue";
+                earnXP(data.points, `Menyelesaikan Stage ${data.stage} Analisis Pola`);
+            } else {
+                soundIncorrect(); groupProfiles[selectedGroup].lives--; 
+                fText.innerText = "JAWABAN SALAH"; fText.style.color = "var(--danger-red)";
+                
+                if (groupProfiles[selectedGroup].lives <= 0) {
+                    groupProfiles[selectedGroup].status = "Tereliminasi";
+                    
+                    let nextGroup = findNextAvailableGroup();
+                    if (nextGroup) {
+                        fSub.innerHTML = `Nyawa ${selectedGroup} telah Habis (0)!<br><b style="color:var(--primary-blue)">ESTAFET OTOMATIS: Tantangan Tahap ${data.stage} dialihkan ke ${nextGroup}!</b>`;
+                        btnFeedback.innerText = `Oper Kendali ke ${nextGroup} ➔`;
+                        selectedGroup = nextGroup; 
+                        groupProfiles[selectedGroup].status = "Sedang Main";
+                        nextActionState = "switch_group";
+                    } else {
+                        fSub.innerHTML = `Nyawa ${selectedGroup} Habis! Dan tidak ada kelompok tersisa di antrean kelas.`;
+                        btnFeedback.innerText = "Lihat Hasil Klasemen Akhir Kelas 📊";
+                        nextActionState = "game_over_all";
+                    }
+                } else {
+                    fSub.innerText = `Kesempatan berkurang. Sisa nyawa kelompok: ${"❤️".repeat(groupProfiles[selectedGroup].lives)}`;
+                    btnFeedback.innerText = "Coba Ulang Tahap Ini 🔄";
+                    nextActionState = "continue";
+                }
+            }
+            overlay.style.display = "flex";
+        }
+
+        function handleNextStep() {
+            document.getElementById("feedback").style.display = "none";
+            
+            if (nextActionState === "game_over_all") {
+                showFinalScoreboard(true);
+                return;
+            }
+            
+            if (nextActionState === "switch_group") {
+                loadGameplay(); 
+                return;
+            }
+
+            if (lastAnswerWasCorrect) {
+                currentActiveStageIdx++; 
+                if (currentActiveStageIdx >= gameStages.length) { 
+                    if(groupProfiles[selectedGroup].status === "Sedang Main") {
+                        groupProfiles[selectedGroup].status = "Selesai 20 Stage";
+                    }
+                    showFinalScoreboard(true); 
+                } else { 
+                    loadGameplay(); 
+                }
+            } else { 
+                loadGameplay(); 
+            }
+        }
+
+        function showFinalScoreboard(isFinalMode = false) {
+            changeScreen("screen-score");
+            const title = document.getElementById("lbl-final-title"); const btnBack = document.getElementById("btn-back-to-room"); const boxPodium = document.getElementById("box-podium");
+            const sortedLeaderboard = Object.entries(groupProfiles).sort((a, b) => b[1].score - a[1].score);
+
+            if (isFinalMode || checkAllGroupsFinished()) {
+                title.innerText = "🏆 HASIL AKHIR TURNAMEN ESTAFET POLA 🏆"; btnBack.style.display = "none"; boxPodium.style.display = "flex";
+                document.getElementById("podium-1-name").innerText = sortedLeaderboard[0] ? sortedLeaderboard[0][0] : "-"; document.getElementById("podium-1-score").innerText = sortedLeaderboard[0] ? `${sortedLeaderboard[0][1].score} Pts` : "0 Pts";
+                document.getElementById("podium-2-name").innerText = sortedLeaderboard[1] ? sortedLeaderboard[1][0] : "-"; document.getElementById("podium-2-score").innerText = sortedLeaderboard[1] ? `${sortedLeaderboard[1][1].score} Pts` : "0 Pts";
+                document.getElementById("podium-3-name").innerText = sortedLeaderboard[2] ? sortedLeaderboard[2][0] : "-"; document.getElementById("podium-3-score").innerText = sortedLeaderboard[2] ? `${sortedLeaderboard[2][1].score} Pts` : "0 Pts";
+                
+                earnXP(50, "Turnamen Pola Selesai Diarsip!");
+            } else { 
+                title.innerText = "📊 PAPAN SKOR SEMENTARA KELAS 📊"; btnBack.style.display = "inline-block"; boxPodium.style.display = "none"; 
+            }
+
+            const tbody = document.getElementById("leaderboard-data"); tbody.innerHTML = "";
+            sortedLeaderboard.forEach(([group, prof], index) => {
+                let medal = index === 0 ? "🥇 " : (index === 1 ? "🥈 " : (index === 2 ? "🥉 " : ""));
+                tbody.innerHTML += `<tr><td style="color:var(--text-muted); font-weight:bold;">#${index + 1}</td><td style="font-weight:700; color:var(--primary-blue);">${medal}${group}</td><td>${"❤️".repeat(prof.lives) || "❌ Habis"}</td><td style="font-weight:bold;">${prof.score} Pts</td><td style="font-size:0.9rem; color:var(--text-muted);">${prof.status}</td></tr>`;
+            });
+        }
+
+        function resetEntireTournament() {
+            currentActiveStageIdx = 0;
+            selectedGroup = "";
+            groupProfiles = {
+                "Kelompok 1": { score: 0, lives: 3, status: "Belum Main" },
+                "Kelompok 2": { score: 0, lives: 3, status: "Belum Main" },
+                "Kelompok 3": { score: 0, lives: 3, status: "Belum Main" },
+                "Kelompok 4": { score: 0, lives: 3, status: "Belum Main" },
+                "Kelompok 5": { score: 0, lives: 3, status: "Belum Main" }
+            };
+            globalXP = 0;
+            document.getElementById("txt-xp-total").innerText = "0 XP";
+            document.getElementById("xp-indicator-bar").style.width = "0%";
+            showSelectionScreen();
+        }
+    </script>
+</body>
+</html>
